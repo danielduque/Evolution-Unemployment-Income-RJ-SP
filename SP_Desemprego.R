@@ -41,7 +41,7 @@ library(curl)
 library(tidyr)
 
 # Escolher um working directory que tenha os exceis disponibilizados
-wd <- "C:/Users/DaniellaBritto/Desktop/PNADs/PNADsCont/PNADC - dta Novo Dicion·rio (2019)"
+wd <- "C:/Users/DaniellaBritto/Desktop/PNADs/PNADsCont/PNADC - dta Novo Dicion√°rio (2019)"
 
 setwd(wd)
 
@@ -52,31 +52,31 @@ PNADCs <- read_excel("PNADCs.xlsx")
 PNADCs <- PNADCs %>% filter(Trimestre==2)
 
 # Excel com deflatores estaduais
-Deflator <- read_excel("C:/Users/DaniellaBritto/Desktop/PNADs/PNADsCont/PNADC - dta Novo Dicion·rio (2019)/deflator_tri_040506_2019_pnadc.xls",sheet="deflator")
+Deflator <- read_excel("C:/Users/DaniellaBritto/Desktop/PNADs/PNADsCont/PNADC - dta Novo Dicion√°rio (2019)/deflator_tri_040506_2019_pnadc.xls",sheet="deflator")
 
-# Dataframe do RJ para Desemprego e Renda Domiciliar per Capita por Tipo geogr·fico
-# Tipo: Capital, Resto da Regi„o Metropolitana e Resto do Estado
+# Dataframe do RJ para Desemprego e Renda Domiciliar per Capita por Tipo geogr√°fico
+# Tipo: Capital, Resto da Regi√£o Metropolitana e Resto do Estado
 SP <- as.data.frame(matrix(nrow=1,ncol=4))
 
 # Dataframe do RJ para Desemprego e Renda Domiciliar per Capita de todo Estado
 Desemp_tempo <- as.data.frame(matrix(nrow=8,ncol=3))
 
-# Nomeando as vari·veis
+# Nomeando as vari√°veis
 
 Desemp_tempo <- Desemp_tempo %>% rename(AnoTri=V1,
-                                      `RTDpc MÈdio`=V2,
+                                      `RTDpc M√©dio`=V2,
                                       `Desemprego`=V3)
                                       
 
 SP <- SP %>% rename(AnoTri=V1,
                               Tipo=V2,
-                              `RTDpc MÈdio`=V3,
+                              `RTDpc M√©dio`=V3,
                               `Desemprego`=V4)
 
 
 options(survey.lonely.psu  = "average")
 
-# ComeÁar o loop
+# Come√ßar o loop
 for (x in 1:8){
   
   PNADC_T <- read_pnadc(microdata = PNADCs$PNADCs[x], input_txt="Input_PNADC_trimestral.txt", vars= c("UPA", "V1028", "UF", "Trimestre", "Ano", "V1008", "V1014", "V1016", "V2001","V2007", "V2010", "V1022", "V20082", "VD4002",  "V2008", "V20081", "VD4031", "VD3004", "V2009", "VD4019", "V4040", "V40401", "V40402", "V40403", "VD3005","V1023"))
@@ -85,10 +85,10 @@ for (x in 1:8){
   
   PNADC_T <- merge(PNADC_T,Deflator,by=c("Ano","Trimestre","UF"))
   
-  # Filtrar para S„o Paulo
+  # Filtrar para S√£o Paulo
   PNADC_T <- PNADC_T %>% filter(UF==35)
   
-  # ConstruÁ„o das vari·veis principais
+  # Constru√ß√£o das vari√°veis principais
   PNADC_T <- PNADC_T %>% mutate(UF = as.factor(UF),
                                 Ano = as.factor(Ano),
                                 Trimestre = as.factor(Trimestre),
@@ -117,7 +117,7 @@ for (x in 1:8){
                                 PD=ifelse(VD4002==2,1,ifelse(VD4002==1,0,NA)),
                                 V1023=ifelse(V1023==4,3,V1023))
   
-  # Construir vari·vel de renda domiciliar e n˙mero de indivÌduos no domicÌlio
+  # Construir vari√°vel de renda domiciliar e n√∫mero de indiv√≠duos no domic√≠lio
   PNADC_T <- PNADC_T %>% group_by(id_dom) %>% mutate(n_ind=sum(pessoa),
                                                      RTD=sum(QlqrRendaTrab))
   # Renda Domiciliar Per Capita
@@ -132,22 +132,22 @@ for (x in 1:8){
 
   # Imputar na base criada anteriormente
   Desemp_tempo$AnoTri[x]=PNADC_T$AnoTri[1]
-  Desemp_tempo$`RTDpc MÈdio`[x]= RTDOMpcmed
+  Desemp_tempo$`RTDpc M√©dio`[x]= RTDOMpcmed
   Desemp_tempo$`Desemprego`[x] = Desemp
 
   
-  # Criar base que ser· adicionada ‡ SP
+  # Criar base que ser√° adicionada √† SP
   PNADC_T2 <-  as.data.frame(matrix(nrow=3,ncol=4))
   PNADC_T2 <- PNADC_T2 %>% rename(AnoTri=V1,
                                   Tipo=V2,
-                                  `RTDpc MÈdio`=V3,
+                                  `RTDpc M√©dio`=V3,
                                   `Desemprego`=V4)
   
-  # Loop para gerar as vari·veis por Capital, Resto da RM e Resto da UF
+  # Loop para gerar as vari√°veis por Capital, Resto da RM e Resto da UF
   for(y in 1:3){
     PNADC_T2$AnoTri[y]= PNADC_T$AnoTri[y]
     PNADC_T2$Tipo[y]= y 
-    PNADC_T2$`RTDpc MÈdio`[y] <- svyratio(~RTD, ~n_ind, subset(dstrat1,V1023==y), na.rm = T)
+    PNADC_T2$`RTDpc M√©dio`[y] <- svyratio(~RTD, ~n_ind, subset(dstrat1,V1023==y), na.rm = T)
     PNADC_T2$`Desemprego`[y] <- svymean(~PD, subset(dstrat1,V1023==y), na.rm = T)
     
   }
@@ -167,10 +167,10 @@ SP <- SP[2:(3*8+1),]
 # Trocar 1, 2 e 3 por "Capital", "Resto da RM" e "Resto da UF"
 SP <- SP %>% mutate(Tipo=ifelse(Tipo==1,"Capital",ifelse(Tipo==2,"Resto da RM","Resto da UF")))
 
-# Gr·fico de linhas
+# Gr√°fico de linhas
 ggplot(SP,aes(x=AnoTri,group=Tipo))+
   geom_line(aes(y=Desemprego*100,colour=Tipo))+
-  labs(title="Desemprego em SP (em %)", caption="Fonte: PNAD ContÌnua 2∫Tri",x="",y="",colour="")+
+  labs(title="Desemprego em SP (em %)", caption="Fonte: PNAD Cont√≠nua 2¬∫Tri",x="",y="",colour="")+
   theme(axis.text.x = element_text(angle = 30,size=8))
 
 ggsave(file="Desemprego_SP_graf.png")
@@ -179,43 +179,43 @@ ggsave(file="Desemprego_SP_graf.png")
 fwrite(Desemp_tempo, file ="Desemp_Tempo_SP.csv")
 fwrite(SP, file ="Renda_Desemp_SP.csv")
 
-# Usar geobr para ler os municÌpios de SP
+# Usar geobr para ler os munic√≠pios de SP
 UF <- read_municipality(year=2010,code_muni=35)
 
-# Ler a classificaÁ„o dos municÌpios por Tipo
+# Ler a classifica√ß√£o dos munic√≠pios por Tipo
 SaoPaulo <- read_excel("Tipo_Mun_SP.xlsx",sheet="Mun_SP")
 
 # Juntar SaoPaulo com SP por Tipo
 SP2 <- merge(SP,SaoPaulo,by="Tipo")
 
-# Criar vari·vel equivalente ‡ da base UF, com cÛdigo do municÌpio
+# Criar vari√°vel equivalente √† da base UF, com c√≥digo do munic√≠pio
 SP2 <- SP2 %>% mutate(code_muni=paste(UF,cod_mun,sep=""))
 
-# Juntar SP2 com UF por cÛdigo do municÌpio
+# Juntar SP2 com UF por c√≥digo do munic√≠pio
 SPfim <- merge(SP2,UF,by="code_muni")
 
 # Multiplicar por 100
 SPfim <- SPfim %>% mutate(Desemprego=Desemprego*100)
 
 # Primeiro mapa-gif (Desemprego)
-plot1 <- ggplot() + geom_sf(data=RJfim, aes(fill= as.numeric(`Desemprego`)),
+plot1 <- ggplot() + geom_sf(data=SPfim, aes(fill= as.numeric(`Desemprego`)),
                             color = "grey", size = 0.0001) +
   scale_fill_distiller(palette = "Reds", 
                        breaks = pretty_breaks(n = 6),
                        direction=1)+
   guides(fill = guide_legend(reverse = TRUE))+
-  labs(title="Desemprego em SP", subtitle = "AnoTri: {current_frame}", caption="Fonte: PNAD ContÌnua 2∫Tri",x="",y="",fill="")+
+  labs(title="Desemprego em SP", subtitle = "AnoTri: {current_frame}", caption="Fonte: PNAD Cont√≠nua 2¬∫Tri",x="",y="",fill="")+
   coord_sf(datum = NA) + 
   transition_manual(AnoTri)
 
 # Segundo mapa-gif (Renda Domiciliar per Capita)
-plot2 <- ggplot() + geom_sf(data=RJfim, aes(fill= as.numeric(`RTDpc MÈdio`)),
+plot2 <- ggplot() + geom_sf(data=SPfim, aes(fill= as.numeric(`RTDpc M√©dio`)),
                             color = "grey", size = 0.0001) +
   scale_fill_distiller(palette = "Blues", 
                        breaks = pretty_breaks(n = 6),
                        direction=1)+
   guides(fill = guide_legend(reverse = TRUE))+
-  labs(title="Renda do Trabalho Domiciliar Per Capita em SP", subtitle = "AnoTri: {current_frame}", caption="Fonte: PNAD ContÌnua 2∫Tri",x="",y="",fill="")+
+  labs(title="Renda do Trabalho Domiciliar Per Capita em SP", subtitle = "AnoTri: {current_frame}", caption="Fonte: PNAD Cont√≠nua 2¬∫Tri",x="",y="",fill="")+
   coord_sf(datum = NA) + 
   transition_manual(AnoTri)
 
